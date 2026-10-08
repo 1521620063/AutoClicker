@@ -14,7 +14,7 @@
 - `service/AutoClickAccessibilityService.kt`：无障碍手势执行与核心调度接入；`ServiceStatus.kt` 发布状态。
 - `settings/SettingsRepository.kt`：SharedPreferences 配置保存与损坏值回退。
 - `core/`：无 Android 依赖的调度、频率、校验、几何、安全与状态规则；JUnit 测试在 `core/src/test/`。
-- `tools/test_ui_contracts.py`：界面源码结构约束，不能代替设备 UI 测试。
+- `core/src/test/kotlin/com/example/autoclicker/core/UiContractsTest.kt`：界面源码结构约束，不能代替设备 UI 测试。
 - `tools/android-check/`：可选源码类型检查，不生成 APK。
 - `docs/verification.md`、`docs/execution-ledger.md`：验证证据和执行记录；设计/计划在 `docs/superpowers/`。
 
@@ -22,7 +22,7 @@
 
 当前固定工具链：Gradle 8.11.1、AGP 8.9.2、Kotlin 2.1.20；JDK 21，JVM 字节码目标 17；minSdk 24，compileSdk/targetSdk 35。不要为无关任务升级依赖。
 
-使用仓库自带的 Gradle Wrapper，在仓库根目录执行；不要依赖某台机器预先解压的 Gradle、SDK 或 Python 路径。
+使用仓库自带的 Gradle Wrapper，在仓库根目录执行；不要依赖某台机器预先解压的 Gradle 或 SDK 路径。
 
 Windows：
 
@@ -33,8 +33,8 @@ Windows：
 # 完整验证
 .\gradlew.bat :core:test :app:testDebugUnitTest :app:lintDebug :app:assembleDebug --rerun-tasks --console=plain
 
-# 界面源码约束（使用当前环境的 Python 3）
-python tools/test_ui_contracts.py
+# 单独运行界面源码约束（不需要 Android SDK）
+.\gradlew.bat -PcoreOnly :core:test --tests "*UiContractsTest"
 ```
 
 macOS / Linux：
@@ -42,10 +42,10 @@ macOS / Linux：
 ```sh
 ./gradlew -PcoreOnly :core:test
 ./gradlew :core:test :app:testDebugUnitTest :app:lintDebug :app:assembleDebug --rerun-tasks --console=plain
-python3 tools/test_ui_contracts.py
+./gradlew -PcoreOnly :core:test --tests "*UiContractsTest"
 ```
 
-开发环境自行安装兼容的 JDK、Android SDK 和 Python 3。SDK 位置通过当前环境的 `ANDROID_HOME` 或不提交的 `local.properties` 中的 `sdk.dir` 配置，不在仓库中硬编码安装路径。SDK 许可应由用户审阅接受，不静默接受新许可。
+开发环境自行安装兼容的 JDK 和 Android SDK。SDK 位置通过当前环境的 `ANDROID_HOME` 或不提交的 `local.properties` 中的 `sdk.dir` 配置，不在仓库中硬编码安装路径。SDK 许可应由用户审阅接受，不静默接受新许可。
 
 如需网络代理，通过开发者私有 Gradle 配置或环境变量配置，不在共享文档中固化代理地址、端口或凭据。不要假设 `.tools/` 下存在可用工具；该目录仅用于忽略的本地辅助文件。
 

@@ -131,3 +131,11 @@ Lint：0 错误、12 警告。旧系统内置状态栏尺寸及反射（2）、A
 - lint：0 错误、13 警告；APK 内部版本 1.2.0 (3)，v2 签名通过。SHA256：34d05bb5d53ea68ee168d2ec34d2a33718e9ba2025c7758fcfb55582e73b81fa。
 - adb 设备列表为空；没有真机、模拟器或视觉验收。此次交付仍为调试签名，不是正式签名版。
 - 标签为 v1.2.0；GitHub Release 附带版本化 APK。上文“尚未提交”等描述为各阶段历史状态，最终发布状态以远端标签/Release 为准。
+
+## 2026-10-08 移除 Python 开发依赖
+
+- 将原有 3 项界面源码约束迁移到 Kotlin/JUnit `UiContractsTest`，删除 Python 脚本；历史验证记录保持原样，仅作为当时执行证据。
+- 界面源码检查纳入 `:core:test`，通过 Gradle 提供仓库根目录，并声明 Android Kotlin 源码为测试输入，避免源码变化时错误跳过测试。不需要 Android SDK，也不新增库依赖。
+- 实际运行 Wrapper：`-PcoreOnly :core:test --rerun-tasks --console=plain`，BUILD SUCCESSFUL，4 项任务实际执行；共 55 项测试（52 项核心逻辑 + 3 项源码约束），0 失败、0 错误。
+- 本次未修改应用运行代码或版本；未重新构建 APK、运行 Android lint 或进行设备/视觉验收。源码约束不能替代设备 UI 测试。
+- 更新 AGENTS.md，开发环境不再要求 Python。未提交、推送或发布。
