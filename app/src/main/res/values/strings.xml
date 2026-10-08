@@ -1,0 +1,5 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name">轻点 · 连点器</string>
+    <string name="service_description">在你主动开始后，按设置的间隔点击你选定的屏幕位置。使用无障碍服务发送点击手势和显示控制器，不读取界面文字、不截图、不联网。可随时通过悬浮控制条停止；锁屏或旋转时自动停止。</string>
+</resources>
