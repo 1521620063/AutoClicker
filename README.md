@@ -6,7 +6,9 @@
 
 已实现中文设置页、配置保存、悬浮控制条、拖动靶心、串行点击调度和异常停止，新增低间隔、倒计时、次数/时长限制和实时频率开关。完整 debug APK 已构建，52 项核心测试通过，Android lint 0 错误 / 13 警告。未连接设备，真机验收未完成。详细结果见 `docs/verification.md`。
 
-安装包：`C:/project/AutoClicker/app/build/outputs/apk/debug/app-debug.apk`。
+安装包：`app/build/outputs/distributions/debug/AutoClicker-1.2.0-debug.apk`。
+
+以后运行 `:app:assembleDebug` 会自动生成 `AutoClicker-<versionName>-debug.apk`，放在 `app/build/outputs/distributions/debug/`；文件名版本来自 Gradle 配置，不需要手动改名。AGP 原始 APK 保留。Release 同样生成带版本号的副本，未配置正式签名时保留 `unsigned` 后缀。
 
 **源码 API 编译不等于 APK 构建，也不等于真机验证。最终 APK 与设备验收状态以验证记录为准。**
 

@@ -119,3 +119,15 @@ Lint：0 错误、12 警告。旧系统内置状态栏尺寸及反射（2）、A
 - 自查：主要操作前置；持续模式隐藏停止值及标题；保留数字校验、运行禁用、权限说明、原生下拉指示和固定 56dp 统计区域；控制器停止使用警示色。
 - 构建时发现说明字符串换行未转义，修复为 Kotlin 换行转义后全量构建成功。
 - 改动未提交、未推送。此前 1.1.0 APK 哈希为历史记录，当前 APK 已覆盖。
+
+## 2026-10-08 版本号打包
+
+修改 Gradle 构建：assemble 自动生成独立 distributions 目录下带 versionName 的 APK 副本，避免修改 AGP 输出目录影响元数据任务。重新执行 assembleDebug --rerun-tasks：36 个任务执行，构建通过。AutoClicker-1.2.0-debug.apk：内部 versionName 1.2.0 / versionCode 3，v2 签名通过，SHA256 34d05bb5d53ea68ee168d2ec34d2a33718e9ba2025c7758fcfb55582e73b81fa。Release 命名规则已配置，但本次未构建/验证 Release。命名配置尚未提交推送。
+
+## v1.2.0 标签与发布前验证（2026-10-08）
+
+- 已恢复调试包命名 `AutoClicker-1.2.0-debug.apk`；文件名自动读取版本，保留 debug 标识。
+- 使用仓库 Gradle Wrapper 全量重新执行核心测试、安卓测试任务、lint 与 assembleDebug：51 个任务执行，构建成功。52 项核心测试无失败/错误；安卓单元测试为 NO-SOURCE。3 项界面源码约束通过。
+- lint：0 错误、13 警告；APK 内部版本 1.2.0 (3)，v2 签名通过。SHA256：34d05bb5d53ea68ee168d2ec34d2a33718e9ba2025c7758fcfb55582e73b81fa。
+- adb 设备列表为空；没有真机、模拟器或视觉验收。此次交付仍为调试签名，不是正式签名版。
+- 标签为 v1.2.0；GitHub Release 附带版本化 APK。上文“尚未提交”等描述为各阶段历史状态，最终发布状态以远端标签/Release 为准。
