@@ -15,6 +15,7 @@ import android.widget.TextView
 import android.widget.Toast
 import com.example.autoclicker.core.*
 import kotlin.math.abs
+import com.example.autoclicker.ui.UiStyle
 
 /** Owns two small touchable windows; never creates a full-screen interception layer. */
 class OverlayController(
@@ -26,13 +27,14 @@ class OverlayController(
     private val onError: (String) -> Unit
 ) {
     private val wm = requireNotNull(context.getSystemService(WindowManager::class.java)) { "Window manager is unavailable" }
-    private val green = Color.rgb(23, 106, 87)
+    private val green = UiStyle.green
     private val white = Color.rgb(248, 250, 245)
     private var running = false
     private var positioned = false
     private var closed = true
     private var targetHidden = false
     private val label = TextView(context)
+    private val statistics = TextView(context)
     private val toggle = Button(context)
     private val target = TargetView(context)
     private val panel = LinearLayout(context)
@@ -48,22 +50,32 @@ class OverlayController(
 
     init {
         panel.orientation = LinearLayout.VERTICAL
-        panel.setPadding(dp(10), dp(6), dp(10), dp(8))
-        panel.background = rounded(green, dp(18).toFloat())
+        panel.setPadding(dp(12), dp(8), dp(12), dp(12))
+        panel.background = UiStyle.surface(context, Color.rgb(26, 48, 43), 20)
         panel.elevation = dp(8).toFloat()
-        label.text = "轻点 · 拖动这里移动"
+        label.text = "⠿  轻点  ·  拖动移动"
         label.setTextColor(white)
         label.textSize = 12f
         label.setPadding(dp(8), dp(8), dp(8), dp(10))
         label.contentDescription = "控制器拖动手柄"
+        label.setSingleLine(true)
+        label.ellipsize = android.text.TextUtils.TruncateAt.END
         panel.addView(label)
+        statistics.text = "等待开始\n完成手势 0 次"
+        statistics.setTextColor(white)
+        statistics.textSize = 12f
+        statistics.setLines(2)
+        statistics.ellipsize = android.text.TextUtils.TruncateAt.END
+        statistics.setPadding(dp(8),0,dp(8),0)
+        // Reserve this area even with frequency disabled. Running text never enlarges the panel.
+        panel.addView(statistics, LinearLayout.LayoutParams(LinearLayout.LayoutParams.MATCH_PARENT,dp(56)))
         val row = LinearLayout(context)
         row.orientation = LinearLayout.HORIZONTAL
         toggle.text = "开始"
         toggle.isAllCaps = false
         toggle.textSize = 14f
         toggle.setTextColor(green)
-        toggle.backgroundTintList = android.content.res.ColorStateList.valueOf(Color.rgb(217, 244, 172))
+        UiStyle.styleButton(toggle, primary = true)
         toggle.setOnClickListener {
             if (running) onStop()
             else {
@@ -79,7 +91,7 @@ class OverlayController(
         close.isAllCaps = false
         close.textSize = 14f
         close.setTextColor(white)
-        close.backgroundTintList = android.content.res.ColorStateList.valueOf(Color.rgb(44, 126, 105))
+        UiStyle.styleButton(close)
         close.setOnClickListener { onClose() }
         val closeLayout = LinearLayout.LayoutParams(0, dp(48), 1f)
         closeLayout.leftMargin = dp(6)
@@ -114,9 +126,13 @@ class OverlayController(
     fun setRunning(value: Boolean) {
         running = value
         toggle.text = if (value) "停止" else "开始"
-        label.text = if (value) "正在点击 · 拖动会停止" else "轻点 · 拖动这里移动"
+        UiStyle.styleButton(toggle, primary = true, destructive = value)
+        label.text = if (value) "已启动 · 拖动会停止" else "⠿  轻点  ·  拖动移动"
+        if (!value) statistics.text = "已停止\n完成手势 0 次"
         toggle.contentDescription = if (value) "停止持续点击" else "开始持续点击"
     }
+    fun setProgress(text: String) { if (!closed && running) statistics.text = text }
+    fun setIdleStatistics(text: String) { if (!closed && !running) statistics.text = text }
     fun close() {
         closed = true
         running = false

@@ -32,6 +32,7 @@ class AutoClickAccessibilityService : AccessibilityService() {
     private var scheduler: ClickScheduler? = null
     private var overlay: OverlayController? = null
     private var receiverRegistered = false
+    private var showFrequency = false
     private val screenOff = object : BroadcastReceiver() {
         override fun onReceive(context: Context?, intent: Intent?) {
             if (intent?.action == Intent.ACTION_SCREEN_OFF) stopClicking("屏幕已关闭，点击已停止")
@@ -57,6 +58,14 @@ class AutoClickAccessibilityService : AccessibilityService() {
                     override fun onCancelled(gestureDescription: GestureDescription?) { complete(false) }
                 }, callbackHandler)
             }
+        }, onProgress = { count, elapsed, remaining ->
+            val summary=if(remaining>0) "倒计时 ${(remaining+999)/1000} 秒 · 可停止"
+                else "完成 $count 次手势 · ${elapsed/1000} 秒"
+            val frequencyText=if (remaining>0) "实时频率：等待开始" else
+                "实时频率：${String.format(java.util.Locale.ROOT, "%.1f", scheduler?.clickRatePerSecond ?: 0.0)} 次/秒"
+            val message=summary + if(showFrequency) "\n$frequencyText" else "\n拖动控制条会停止"
+            overlay?.setProgress(message)
+            ServiceStatus.publish(message)
         }) { reason -> stopClicking(reason) }
         safetyMonitor = SafetyMonitor(object : SchedulerClock {
             override fun nowMs() = SystemClock.uptimeMillis()
@@ -87,6 +96,8 @@ class AutoClickAccessibilityService : AccessibilityService() {
         return try {
             overlay = controller
             controller.show()
+            showFrequency = SettingsRepository(this).options.showFrequency
+            controller.setIdleStatistics(if(showFrequency) "等待开始\n实时频率：0.0 次/秒" else "等待开始\n完成手势 0 次")
             ServiceStatus.publish("拖动靶心定位，然后点击开始")
             true
         } catch (_: RuntimeException) {
@@ -97,7 +108,8 @@ class AutoClickAccessibilityService : AccessibilityService() {
     }
 
     private fun startClicking(point: ClickPoint) {
-        val interval = SettingsRepository(this).intervalMs
+        val options = SettingsRepository(this).options
+        val interval = options.intervalMs
         val power = getSystemService(PowerManager::class.java)
         val keyguard = getSystemService(KeyguardManager::class.java)
         if (!ServiceStatus.state.canStart(power?.isInteractive == true, keyguard?.isKeyguardLocked != false, interval)) {
@@ -105,11 +117,12 @@ class AutoClickAccessibilityService : AccessibilityService() {
             return
         }
         try {
+            showFrequency = options.showFrequency
             overlay?.hideTarget()
-            if (scheduler?.start(point, interval) == true) {
-                ServiceStatus.state.setRunning(true)
-                overlay?.setRunning(true)
-                ServiceStatus.publish("正在点击 · 间隔 ${interval} 毫秒")
+            // Mark active before start's synchronous progress callback (also covers countdown).
+            ServiceStatus.state.setRunning(true)
+            overlay?.setRunning(true)
+            if (scheduler?.start(point, options) == true) {
                 safetyMonitor?.start()
             } else { stopClicking("无法开始点击") }
         } catch (_: RuntimeException) { closeController("悬浮窗口异常，点击已停止") }
@@ -120,6 +133,7 @@ class AutoClickAccessibilityService : AccessibilityService() {
         scheduler?.stop()
         ServiceStatus.state.setRunning(false)
         overlay?.setRunning(false)
+        overlay?.setIdleStatistics(if(showFrequency) "已停止\n实时频率：0.0 次/秒" else "已停止\n完成手势 ${scheduler?.completedClicks ?: 0} 次")
         overlay?.restoreTarget()
         ServiceStatus.publish(reason)
     }
